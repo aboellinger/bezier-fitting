@@ -84,12 +84,28 @@ void fitStroke()
   {
     int n = raw_stroke.size();
 
+    float stroke_length = 0;
+    for (int i=1; i<raw_stroke.size(); i++)
+    {
+      PVector p0 = raw_stroke.get(i-1);
+      PVector p1 = raw_stroke.get(i);
+      stroke_length += PVector.dist(p0, p1);
+    }
+
     Matrix X = Matrix.array(new float[n][4]);
     Matrix Xt = Matrix.array(new float[4][n]);
     Matrix Yx = Matrix.array(new float[n][1]);
     Matrix Yy = Matrix.array(new float[n][1]);
+
+    float current_length = 0;
     for (int i=0; i<n; i++) {
-      float t = float(i) / (n-1);
+      if (i > 0)
+      {
+        PVector p0 = raw_stroke.get(i-1);
+        PVector p1 = raw_stroke.get(i);
+        current_length += PVector.dist(p0, p1);
+      }
+      float t = current_length / stroke_length;
 
       Xt.array[0][i] = X.array[i][0] =   (1-t)*(1-t)*(1-t);
       Xt.array[1][i] = X.array[i][1] = 3*(1-t)*(1-t)*t;
