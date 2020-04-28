@@ -82,44 +82,53 @@ void fitStroke()
     return;
   } else
   {
+
+    PVector p0, p1, p2, p3;
     int n = raw_stroke.size();
 
     float stroke_length = 0;
     for (int i=1; i<raw_stroke.size(); i++)
     {
-      PVector p0 = raw_stroke.get(i-1);
-      PVector p1 = raw_stroke.get(i);
-      stroke_length += PVector.dist(p0, p1);
+
+      PVector a = raw_stroke.get(i-1);
+      PVector b = raw_stroke.get(i);
+      stroke_length += PVector.dist(a, b);
     }
 
-    Matrix X = Matrix.array(new float[n][4]);
-    Matrix Xt = Matrix.array(new float[4][n]);
+    Matrix X = Matrix.array(new float[n][2]);
+    Matrix Xt = Matrix.array(new float[2][n]);
     Matrix Yx = Matrix.array(new float[n][1]);
     Matrix Yy = Matrix.array(new float[n][1]);
+
+    p0 = raw_stroke.get(0);
+    p3 = raw_stroke.get(n-1);
 
     float current_length = 0;
     for (int i=0; i<n; i++) {
       if (i > 0)
       {
-        PVector p0 = raw_stroke.get(i-1);
-        PVector p1 = raw_stroke.get(i);
-        current_length += PVector.dist(p0, p1);
+        PVector a = raw_stroke.get(i-1);
+        PVector b = raw_stroke.get(i);
+        current_length += PVector.dist(a, b);
       }
       float t = current_length / stroke_length;
 
-      Xt.array[0][i] = X.array[i][0] =   (1-t)*(1-t)*(1-t);
-      Xt.array[1][i] = X.array[i][1] = 3*(1-t)*(1-t)*t;
-      Xt.array[2][i] = X.array[i][2] = 3*(1-t)*t*t;
-      Xt.array[3][i] = X.array[i][3] =   t*t*t;
+      float w0, w1, w2, w3;
+      w0 = (1-t)*(1-t)*(1-t);
+      w1 = 3*(1-t)*(1-t)*t;
+      w2 = 3*(1-t)*t*t;
+      w3 = t*t*t;
 
-      Yx.array[i][0] = raw_stroke.get(i).x;
-      Yy.array[i][0] = raw_stroke.get(i).y;
+      Xt.array[0][i] = X.array[i][0] = w1;
+      Xt.array[1][i] = X.array[i][1] = w2;
+
+      PVector p = raw_stroke.get(i).copy();
+      p.sub(PVector.mult(p0, w0));
+      p.sub(PVector.mult(p3, w3));
+
+      Yx.array[i][0] = p.x;
+      Yy.array[i][0] = p.y;
     }
-
-    println(X);
-    println(Xt);
-    println(Yx);
-    println(Yy);
 
     // Parameters = inverse(transpose(X)*X)*transpose(X)*y
     Matrix M = Matrix.Multiply(Matrix.inverse(Matrix.Multiply(Xt, X)), Xt);
@@ -129,10 +138,8 @@ void fitStroke()
 
     print("Px:"+Px.array.length+"x"+Px.array[0].length);
 
-    PVector p0 = new PVector(Px.array[0][0], Py.array[0][0]);
-    PVector p1 = new PVector(Px.array[1][0], Py.array[1][0]);
-    PVector p2 = new PVector(Px.array[2][0], Py.array[2][0]);
-    PVector p3 = new PVector(Px.array[3][0], Py.array[3][0]);
+    p1 = new PVector(Px.array[0][0], Py.array[0][0]);
+    p2 = new PVector(Px.array[1][0], Py.array[1][0]);
 
     println(p0+" "+p1+" "+p2+" "+p3);
 
