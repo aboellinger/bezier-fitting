@@ -78,6 +78,16 @@ void drawBezier(PVector[] p)
 void addPointToStroke(MouseEvent event)
 {
   raw_stroke.add(new PVector(event.getX(), event.getY()));
+
+  // Average points (alternatively odd and even ones)
+  int n = raw_stroke.size();
+  for (int i=n-2; i>0; i -= 2) {
+    PVector p0 = raw_stroke.get(i-1);
+    PVector p1 = raw_stroke.get(i);
+    PVector p2 = raw_stroke.get(i+1);
+
+    p1.lerp(PVector.lerp(p0, p2, 0.5), 0.5);
+  }
 }
 
 
